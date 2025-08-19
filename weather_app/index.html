@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast App</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="weather-container" id="weatherContainer">
+        <header class="header">
+            <h1><i class="fas fa-cloud-sun"></i> Weather Forecast</h1>
+            <div class="controls">
+                <div class="units-toggle">
+                    <button id="celsiusBtn" class="unit-btn active">°C</button>
+                    <button id="fahrenheitBtn" class="unit-btn">°F</button>
+                </div>
+                <button id="locationBtn" class="location-btn">
+                    <i class="fas fa-location-arrow"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="cityInput" placeholder="Search for a city..." autocomplete="off">
+                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading weather data...</p>
+            </div>
+
+            <div class="error-message" id="errorMessage" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p id="errorText">Something went wrong. Please try again.</p>
+            </div>
+
+            <div class="weather-content" id="weatherContent" style="display: none;">
+                <div class="current-weather">
+                    <div class="weather-main">
+                        <div class="location-info">
+                            <h2 id="locationName">-</h2>
+                            <p id="locationDetails">-</p>
+                            <p id="localTime">-</p>
+                        </div>
+                        <div class="weather-icon">
+                            <img id="weatherIcon" src="" alt="Weather icon">
+                        </div>
+                    </div>
+
+                    <div class="temperature-info">
+                        <div class="main-temp">
+                            <span id="currentTemp">-</span>
+                            <span class="unit">°C</span>
+                        </div>
+                        <div class="feels-like">
+                            Feels like <span id="feelsLike">-</span><span class="unit">°C</span>
+                        </div>
+                        <div class="condition" id="weatherCondition">-</div>
+                    </div>
+
+                    <div class="weather-details">
+                        <div class="detail-item">
+                            <i class="fas fa-tint"></i>
+                            <span>Humidity</span>
+                            <span id="humidity">-%</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-wind"></i>
+                            <span>Wind</span>
+                            <span id="windSpeed">- km/h</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-sun"></i>
+                            <span>UV Index</span>
+                            <span id="uvIndex">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="forecast-section">
+                    <h3><i class="fas fa-calendar-week"></i> 5-Day Forecast</h3>
+                    <div class="forecast-container" id="forecastContainer">
+                        <!-- Forecast days will be populated here -->
+                    </div>
+                </div>
+
+                <div class="hourly-section">
+                    <h3><i class="fas fa-clock"></i> Hourly Forecast</h3>
+                    <div class="hourly-container" id="hourlyContainer">
+                        <!-- Hourly forecast will be populated here -->
+                    </div>
+                </div>
+
+                <div class="additional-info">
+                    <div class="info-card">
+                        <h4><i class="fas fa-sun"></i> Sun Times</h4>
+                        <div class="sun-times">
+                            <div class="sun-time">
+                                <span>Sunrise</span>
+                                <span id="sunrise">-</span>
+                            </div>
+                            <div class="sun-time">
+                                <span>Sunset</span>
+                                <span id="sunset">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h4><i class="fas fa-leaf"></i> Air Quality</h4>
+                        <div class="air-quality" id="airQuality">
+                            <span id="aqiValue">-</span>
+                            <span id="aqiDescription">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Weather Forecast App | Data provided by WeatherAPI</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
