@@ -18,7 +18,10 @@
                     <button id="celsiusBtn" class="unit-btn active">°C</button>
                     <button id="fahrenheitBtn" class="unit-btn">°F</button>
                 </div>
-                <button id="locationBtn" class="location-btn">
+                <button id="themeToggle" class="theme-btn" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="locationBtn" class="location-btn" title="Get Current Location">
                     <i class="fas fa-location-arrow"></i>
                 </button>
             </div>
@@ -32,6 +35,12 @@
                 </div>
             </div>
 
+            <nav class="view-tabs">
+                <button id="currentTab" class="tab-btn active">Current</button>
+                <button id="forecastTab" class="tab-btn">Forecast</button>
+                <button id="historyTab" class="tab-btn">History</button>
+            </nav>
+
             <div class="loading" id="loading" style="display: none;">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Loading weather data...</p>
@@ -43,82 +52,98 @@
             </div>
 
             <div class="weather-content" id="weatherContent" style="display: none;">
-                <div class="current-weather">
-                    <div class="weather-main">
-                        <div class="location-info">
-                            <h2 id="locationName">-</h2>
-                            <p id="locationDetails">-</p>
-                            <p id="localTime">-</p>
-                        </div>
-                        <div class="weather-icon">
-                            <img id="weatherIcon" src="" alt="Weather icon">
-                        </div>
-                    </div>
-
-                    <div class="temperature-info">
-                        <div class="main-temp">
-                            <span id="currentTemp">-</span>
-                            <span class="unit">°C</span>
-                        </div>
-                        <div class="feels-like">
-                            Feels like <span id="feelsLike">-</span><span class="unit">°C</span>
-                        </div>
-                        <div class="condition" id="weatherCondition">-</div>
-                    </div>
-
-                    <div class="weather-details">
-                        <div class="detail-item">
-                            <i class="fas fa-tint"></i>
-                            <span>Humidity</span>
-                            <span id="humidity">-%</span>
-                        </div>
-                        <div class="detail-item">
-                            <i class="fas fa-wind"></i>
-                            <span>Wind</span>
-                            <span id="windSpeed">- km/h</span>
-                        </div>
-                        <div class="detail-item">
-                            <i class="fas fa-sun"></i>
-                            <span>UV Index</span>
-                            <span id="uvIndex">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="forecast-section">
-                    <h3><i class="fas fa-calendar-week"></i> 5-Day Forecast</h3>
-                    <div class="forecast-container" id="forecastContainer">
-                        <!-- Forecast days will be populated here -->
-                    </div>
-                </div>
-
-                <div class="hourly-section">
-                    <h3><i class="fas fa-clock"></i> Hourly Forecast</h3>
-                    <div class="hourly-container" id="hourlyContainer">
-                        <!-- Hourly forecast will be populated here -->
-                    </div>
-                </div>
-
-                <div class="additional-info">
-                    <div class="info-card">
-                        <h4><i class="fas fa-sun"></i> Sun Times</h4>
-                        <div class="sun-times">
-                            <div class="sun-time">
-                                <span>Sunrise</span>
-                                <span id="sunrise">-</span>
+                <!-- Current Weather View -->
+                <div class="view-content" id="currentView">
+                    <div class="current-weather">
+                        <div class="weather-main">
+                            <div class="location-info">
+                                <h2 id="locationName">-</h2>
+                                <p id="locationDetails">-</p>
+                                <p id="localTime">-</p>
                             </div>
-                            <div class="sun-time">
-                                <span>Sunset</span>
-                                <span id="sunset">-</span>
+                            <div class="weather-icon">
+                                <img id="weatherIcon" src="" alt="Weather icon">
+                            </div>
+                        </div>
+
+                        <div class="temperature-info">
+                            <div class="main-temp">
+                                <span id="currentTemp">-</span>
+                                <span class="unit">°C</span>
+                            </div>
+                            <div class="feels-like">
+                                Feels like <span id="feelsLike">-</span><span class="unit">°C</span>
+                            </div>
+                            <div class="condition" id="weatherCondition">-</div>
+                        </div>
+
+                        <div class="weather-details">
+                            <div class="detail-item">
+                                <i class="fas fa-tint"></i>
+                                <span>Humidity</span>
+                                <span id="humidity">-%</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-wind"></i>
+                                <span>Wind</span>
+                                <span id="windSpeed">- km/h</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-sun"></i>
+                                <span>UV Index</span>
+                                <span id="uvIndex">-</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="info-card">
-                        <h4><i class="fas fa-leaf"></i> Air Quality</h4>
-                        <div class="air-quality" id="airQuality">
-                            <span id="aqiValue">-</span>
-                            <span id="aqiDescription">-</span>
+                    <div class="additional-info">
+                        <div class="info-card">
+                            <h4><i class="fas fa-sun"></i> Sun Times</h4>
+                            <div class="sun-times">
+                                <div class="sun-time">
+                                    <span>Sunrise</span>
+                                    <span id="sunrise">-</span>
+                                </div>
+                                <div class="sun-time">
+                                    <span>Sunset</span>
+                                    <span id="sunset">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h4><i class="fas fa-leaf"></i> Air Quality</h4>
+                            <div class="air-quality" id="airQuality">
+                                <span id="aqiValue">-</span>
+                                <span id="aqiDescription">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forecast View -->
+                <div class="view-content" id="forecastView" style="display: none;">
+                    <div class="forecast-section">
+                        <h3><i class="fas fa-calendar-week"></i> 5-Day Forecast</h3>
+                        <div class="forecast-container" id="forecastContainer">
+                            <!-- Forecast days will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="hourly-section">
+                        <h3><i class="fas fa-clock"></i> Hourly Forecast</h3>
+                        <div class="hourly-container" id="hourlyContainer">
+                            <!-- Hourly forecast will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History View -->
+                <div class="view-content" id="historyView" style="display: none;">
+                    <div class="history-section">
+                        <h3><i class="fas fa-history"></i> 3-Day History</h3>
+                        <div class="history-container" id="historyContainer">
+                            <!-- Historical data will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -126,7 +151,7 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2024 Weather Forecast App | Data provided by WeatherAPI</p>
+            <p>&copy; 2025 Design and developed by Jayesh Afre | Data provided by WeatherAPI</p>
         </footer>
     </div>
 

@@ -448,3 +448,301 @@ body.snowy {
         font-size: 2.5rem;
     }
 }
+
+
+/* =========================
+   THEME TOGGLE (Light / Dark)
+   Works with body class set by JS: .light-theme or .dark-theme
+   ========================= */
+
+/* Design tokens (CSS variables) */
+body.light-theme {
+    --text-primary: #1f2937;
+    /* Gray-800 */
+    --text-secondary: rgba(31, 41, 55, .75);
+    --heading: #111827;
+    /* Gray-900 */
+    --accent: #0984e3;
+    --accent-strong: #0770c9;
+    --chip-fg: #111827;
+    --chip-bg: rgba(0, 0, 0, .06);
+
+    --glass-bg: rgba(255, 255, 255, .85);
+    --glass-soft: rgba(255, 255, 255, .75);
+    --card-bg: rgba(255, 255, 255, .95);
+    --card-hover: rgba(255, 255, 255, 1);
+    --border: rgba(0, 0, 0, .08);
+
+    --control-bg: rgba(0, 0, 0, .06);
+    --control-hover: rgba(0, 0, 0, .12);
+    --control-fg: #111827;
+
+    --search-bg: #ffffff;
+    --search-fg: #111827;
+    --search-border: rgba(0, 0, 0, .1);
+}
+
+body.dark-theme {
+    --text-primary: #f3f4f6;
+    /* Gray-100 */
+    --text-secondary: rgba(243, 244, 246, .75);
+    --heading: #ffffff;
+    --accent: #0984e3;
+    --accent-strong: #0791ff;
+    --chip-fg: #f9fafb;
+    --chip-bg: rgba(255, 255, 255, .08);
+
+    --glass-bg: rgba(255, 255, 255, .12);
+    --glass-soft: rgba(255, 255, 255, .10);
+    --card-bg: rgba(255, 255, 255, .15);
+    --card-hover: rgba(255, 255, 255, .22);
+    --border: rgba(255, 255, 255, .18);
+
+    --control-bg: rgba(255, 255, 255, .12);
+    --control-hover: rgba(255, 255, 255, .22);
+    --control-fg: #ffffff;
+
+    --search-bg: rgba(0, 0, 0, .35);
+    --search-fg: #f9fafb;
+    --search-border: rgba(255, 255, 255, .15);
+}
+
+/* Container + header use theme tokens */
+body.light-theme .header,
+body.dark-theme .header {
+    background: var(--glass-bg);
+    border: 1px solid var(--border);
+}
+
+body.light-theme .header h1,
+body.dark-theme .header h1 {
+    color: var(--heading);
+}
+
+body.light-theme .header h1 i,
+body.dark-theme .header h1 i {
+    color: #f1c40f;
+}
+
+/* Unit toggle pills */
+body.light-theme .units-toggle {
+    background: var(--control-bg);
+}
+
+body.dark-theme .units-toggle {
+    background: var(--control-bg);
+}
+
+body.light-theme .unit-btn,
+body.dark-theme .unit-btn {
+    color: var(--control-fg);
+}
+
+body.light-theme .unit-btn.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+body.dark-theme .unit-btn.active {
+    background: #fff;
+    color: var(--accent);
+}
+
+/* Theme toggle + location buttons */
+.theme-btn,
+.location-btn {
+    background: var(--control-bg);
+    color: var(--control-fg);
+    border: 1px solid transparent;
+}
+
+.theme-btn:hover,
+.location-btn:hover {
+    background: var(--control-hover);
+}
+
+/* Search */
+body.light-theme .search-box {
+    background: var(--search-bg);
+    border: 1px solid var(--search-border);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+}
+
+body.dark-theme .search-box {
+    background: var(--search-bg);
+    border: 1px solid var(--search-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+}
+
+body.light-theme .search-box input {
+    color: var(--search-fg);
+}
+
+body.dark-theme .search-box input {
+    color: var(--search-fg);
+}
+
+/* Tabs */
+.view-tabs {
+    display: flex;
+    gap: .5rem;
+    justify-content: center;
+}
+
+.view-tabs .tab-btn {
+    padding: .6rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--control-bg);
+    color: var(--control-fg);
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.view-tabs .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: transparent;
+}
+
+.view-tabs .tab-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Cards & glass blocks */
+body.light-theme .current-weather,
+body.light-theme .forecast-section,
+body.light-theme .hourly-section,
+body.light-theme .info-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+body.dark-theme .current-weather,
+body.dark-theme .forecast-section,
+body.dark-theme .hourly-section,
+body.dark-theme .info-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+/* Hover lift */
+body.light-theme .forecast-day:hover,
+body.light-theme .hourly-item:hover {
+    background: var(--card-hover);
+}
+
+body.dark-theme .forecast-day:hover,
+body.dark-theme .hourly-item:hover {
+    background: var(--card-hover);
+}
+
+/* Text colors inside cards */
+body.light-theme .location-info h2,
+body.dark-theme .location-info h2,
+body.light-theme .condition,
+body.dark-theme .condition,
+body.light-theme .forecast-section h3,
+body.dark-theme .forecast-section h3,
+body.light-theme .hourly-section h3,
+body.dark-theme .hourly-section h3,
+body.light-theme .info-card h4,
+body.dark-theme .info-card h4 {
+    color: var(--heading);
+}
+
+body.light-theme .location-info p,
+body.dark-theme .location-info p,
+body.light-theme .feels-like,
+body.dark-theme .feels-like,
+body.light-theme .forecast-day h4,
+body.dark-theme .forecast-day h4 {
+    color: var(--text-secondary);
+}
+
+body.light-theme .main-temp,
+body.dark-theme .main-temp,
+body.light-theme .air-quality #aqiValue,
+body.dark-theme .air-quality #aqiValue {
+    color: var(--heading);
+}
+
+/* Small chips / detail items */
+body.light-theme .detail-item {
+    background: var(--chip-bg);
+    color: var(--chip-fg);
+    border: 1px solid var(--border);
+}
+
+body.dark-theme .detail-item {
+    background: var(--chip-bg);
+    color: var(--chip-fg);
+    border: 1px solid var(--border);
+}
+
+body.light-theme .detail-item i,
+body.dark-theme .detail-item i {
+    color: #f1c40f;
+}
+
+/* Forecast & hourly items */
+body.light-theme .forecast-day,
+body.light-theme .hourly-item {
+    background: var(--glass-soft);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+body.dark-theme .forecast-day,
+body.dark-theme .hourly-item {
+    background: var(--glass-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+/* Loading & error states */
+body.light-theme .loading,
+body.dark-theme .loading,
+body.light-theme .error-message,
+body.dark-theme .error-message {
+    color: var(--text-primary);
+}
+
+body.light-theme .error-message {
+    background: rgba(231, 76, 60, 0.12);
+    border: 1px solid rgba(231, 76, 60, 0.35);
+    color: #b00020;
+}
+
+body.dark-theme .error-message {
+    background: rgba(231, 76, 60, 0.9);
+    color: #fff;
+}
+
+/* Footer */
+body.light-theme .footer,
+body.dark-theme .footer {
+    color: var(--text-secondary);
+}
+
+/* Ensure body text color follows theme in general containers */
+body.light-theme .weather-container,
+body.dark-theme .weather-container {
+    color: var(--text-primary);
+}
+
+/* Optional: soften weather-dependent backgrounds in light theme for readability */
+body.light-theme.sunny,
+body.light-theme.rainy {
+    background: linear-gradient(135deg, #e6f3ff 0%, #cfe8ff 100%);
+}
+
+body.light-theme.cloudy {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+body.light-theme.snowy {
+    background: linear-gradient(135deg, #eef2ff 0%, #e9d5ff 100%);
+}

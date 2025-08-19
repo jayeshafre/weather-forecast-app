@@ -6,8 +6,9 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 // State management
 let currentUnit = 'celsius';
 let currentWeatherData = null;
-
-
+let currentCity = null;
+let currentTheme = 'light';
+let currentView = 'current';
 
 // DOM elements
 const elements = {
@@ -16,11 +17,20 @@ const elements = {
     locationBtn: document.getElementById('locationBtn'),
     celsiusBtn: document.getElementById('celsiusBtn'),
     fahrenheitBtn: document.getElementById('fahrenheitBtn'),
+    themeToggle: document.getElementById('themeToggle'),
     loading: document.getElementById('loading'),
     errorMessage: document.getElementById('errorMessage'),
     errorText: document.getElementById('errorText'),
     weatherContent: document.getElementById('weatherContent'),
     weatherContainer: document.getElementById('weatherContainer'),
+    
+    // Tab navigation
+    currentTab: document.getElementById('currentTab'),
+    forecastTab: document.getElementById('forecastTab'),
+    historyTab: document.getElementById('historyTab'),
+    currentView: document.getElementById('currentView'),
+    forecastView: document.getElementById('forecastView'),
+    historyView: document.getElementById('historyView'),
     
     // Current weather elements
     locationName: document.getElementById('locationName'),
@@ -40,7 +50,10 @@ const elements = {
     sunrise: document.getElementById('sunrise'),
     sunset: document.getElementById('sunset'),
     aqiValue: document.getElementById('aqiValue'),
-    aqiDescription: document.getElementById('aqiDescription')
+    aqiDescription: document.getElementById('aqiDescription'),
+    
+    // History elements
+    historyContainer: document.getElementById('historyContainer')
 };
 
 // Event listeners
@@ -50,17 +63,77 @@ elements.cityInput.addEventListener('keypress', handleKeyPress);
 elements.locationBtn.addEventListener('click', handleLocationSearch);
 elements.celsiusBtn.addEventListener('click', () => setUnit('celsius'));
 elements.fahrenheitBtn.addEventListener('click', () => setUnit('fahrenheit'));
+elements.themeToggle.addEventListener('click', toggleTheme);
+
+// Tab navigation
+elements.currentTab.addEventListener('click', () => switchView('current'));
+elements.forecastTab.addEventListener('click', () => switchView('forecast'));
+elements.historyTab.addEventListener('click', () => switchView('history'));
 
 // Initialize the application
 function initializeApp() {
+    // Load saved theme from localStorage
+    const savedTheme = localStorage.getItem('weatherAppTheme') || 'light';
+    setTheme(savedTheme);
+    
     // Try to get user's location on load
     handleLocationSearch();
+}
+
+// Theme management
+function toggleTheme() {
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+}
+
+function setTheme(theme) {
+    currentTheme = theme;
+    document.body.classList.remove('light-theme', 'dark-theme');
+    document.body.classList.add(`${theme}-theme`);
+    
+    // Update theme toggle icon
+    const icon = elements.themeToggle.querySelector('i');
+    icon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+    
+    // Save theme preference
+    localStorage.setItem('weatherAppTheme', theme);
+}
+
+// View switching
+function switchView(viewName) {
+    currentView = viewName;
+    
+    // Update active tab
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`${viewName}Tab`).classList.add('active');
+    
+    // Show/hide view content
+    document.querySelectorAll('.view-content').forEach(view => view.style.display = 'none');
+    document.getElementById(`${viewName}View`).style.display = 'block';
+    
+    // Load data for the selected view
+    if (currentCity) {
+        switch (viewName) {
+            case 'current':
+                // Current data is already loaded
+                break;
+            case 'forecast':
+                if (!currentWeatherData?.forecast) {
+                    loadForecastData(currentCity);
+                }
+                break;
+            case 'history':
+                loadHistoryData(currentCity);
+                break;
+        }
+    }
 }
 
 // Handle search button click
 function handleSearch() {
     const city = elements.cityInput.value.trim();
     if (city) {
+        currentCity = city;
         searchWeatherByCity(city);
     }
 }
@@ -88,6 +161,9 @@ function setUnit(unit) {
     // Update display if we have weather data
     if (currentWeatherData) {
         updateWeatherDisplay(currentWeatherData);
+        if (currentWeatherData.history) {
+            updateHistoryDisplay(currentWeatherData.history);
+        }
     }
 }
 
@@ -140,6 +216,43 @@ async function searchWeatherByCity(city) {
     }
 }
 
+// Load forecast data
+async function loadForecastData(city) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/weather/forecast?city=${encodeURIComponent(city)}&days=5`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch forecast data');
+        }
+        
+        const forecastData = await response.json();
+        currentWeatherData.forecast = forecastData;
+        updateForecastDisplay(forecastData.forecast.forecastday);
+        
+    } catch (error) {
+        console.error('Error fetching forecast:', error);
+    }
+}
+
+// Load history data
+async function loadHistoryData(city) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/weather/history?city=${encodeURIComponent(city)}&days=3`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch history data');
+        }
+        
+        const historyData = await response.json();
+        currentWeatherData.history = historyData.history;
+        updateHistoryDisplay(historyData.history);
+        
+    } catch (error) {
+        console.error('Error fetching history:', error);
+        elements.historyContainer.innerHTML = '<p class="error-text">Failed to load historical data</p>';
+    }
+}
+
 // API call to fetch weather by location
 async function fetchWeatherByLocation() {
     showLoading();
@@ -157,6 +270,7 @@ async function fetchWeatherByLocation() {
         const currentData = await currentResponse.json();
         const forecastData = await forecastResponse.json();
         
+        currentCity = currentData.location.name;
         currentWeatherData = { current: currentData, forecast: forecastData };
         updateWeatherDisplay(currentWeatherData);
         showWeatherContent();
@@ -169,7 +283,7 @@ async function fetchWeatherByLocation() {
 
 // Update weather display
 function updateWeatherDisplay(data) {
-    const { current, forecast } = data;
+    const { current } = data;
     
     // Update location info
     elements.locationName.textContent = current.location.name;
@@ -209,14 +323,16 @@ function updateWeatherDisplay(data) {
         elements.aqiDescription.textContent = 'Data not available';
     }
     
-    // Update forecast
-    updateForecastDisplay(forecast.forecast.forecastday);
-    
-    // Update sun times (from first forecast day)
-    if (forecast.forecast.forecastday.length > 0) {
-        const astro = forecast.forecast.forecastday[0].astro;
-        elements.sunrise.textContent = astro.sunrise;
-        elements.sunset.textContent = astro.sunset;
+    // Update forecast if available
+    if (data.forecast) {
+        updateForecastDisplay(data.forecast.forecast.forecastday);
+        
+        // Update sun times (from first forecast day)
+        if (data.forecast.forecast.forecastday.length > 0) {
+            const astro = data.forecast.forecast.forecastday[0].astro;
+            elements.sunrise.textContent = astro.sunrise;
+            elements.sunset.textContent = astro.sunset;
+        }
     }
     
     // Update background based on weather condition
@@ -245,6 +361,10 @@ function updateForecastDisplay(forecastDays) {
             <div class="temps">
                 <span class="high">${Math.round(highTemp)}${unit}</span>
                 <span class="low">${Math.round(lowTemp)}${unit}</span>
+            </div>
+            <div class="extra-info">
+                <small><i class="fas fa-tint"></i> ${day.day.avghumidity}%</small>
+                <small><i class="fas fa-wind"></i> ${day.day.maxwind_kph} km/h</small>
             </div>
         `;
         
@@ -283,6 +403,80 @@ function updateHourlyDisplay(hourlyData) {
         `;
         
         elements.hourlyContainer.appendChild(hourlyElement);
+    });
+}
+
+// Update history display
+function updateHistoryDisplay(historyData) {
+    elements.historyContainer.innerHTML = '';
+    
+    if (!historyData || historyData.length === 0) {
+        elements.historyContainer.innerHTML = '<p class="no-data">No historical data available</p>';
+        return;
+    }
+    
+    historyData.forEach((day, index) => {
+        const historyElement = document.createElement('div');
+        historyElement.className = 'history-day';
+        
+        const date = new Date(day.date);
+        const dayName = index === 0 ? 'Yesterday' : date.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        const highTemp = currentUnit === 'celsius' ? day.day.maxtemp_c : day.day.maxtemp_f;
+        const lowTemp = currentUnit === 'celsius' ? day.day.mintemp_c : day.day.mintemp_f;
+        const avgTemp = currentUnit === 'celsius' ? day.day.avgtemp_c : day.day.avgtemp_f;
+        const unit = currentUnit === 'celsius' ? '°C' : '°F';
+        
+        historyElement.innerHTML = `
+            <div class="history-header">
+                <h4>${dayName}</h4>
+                <span class="history-date">${date.toLocaleDateString()}</span>
+            </div>
+            <div class="history-content">
+                <div class="history-weather">
+                    <img src="https:${day.day.condition.icon}" alt="${day.day.condition.text}">
+                    <div class="history-condition">${day.day.condition.text}</div>
+                </div>
+                <div class="history-temps">
+                    <div class="temp-row">
+                        <span class="temp-label">High:</span>
+                        <span class="temp-value high">${Math.round(highTemp)}${unit}</span>
+                    </div>
+                    <div class="temp-row">
+                        <span class="temp-label">Low:</span>
+                        <span class="temp-value low">${Math.round(lowTemp)}${unit}</span>
+                    </div>
+                    <div class="temp-row">
+                        <span class="temp-label">Avg:</span>
+                        <span class="temp-value">${Math.round(avgTemp)}${unit}</span>
+                    </div>
+                </div>
+                <div class="history-details">
+                    <div class="detail-small">
+                        <i class="fas fa-tint"></i>
+                        <span>${day.day.avghumidity}%</span>
+                    </div>
+                    <div class="detail-small">
+                        <i class="fas fa-wind"></i>
+                        <span>${day.day.maxwind_kph} km/h</span>
+                    </div>
+                    <div class="detail-small">
+                        <i class="fas fa-cloud-rain"></i>
+                        <span>${day.day.totalprecip_mm}mm</span>
+                    </div>
+                    <div class="detail-small">
+                        <i class="fas fa-sun"></i>
+                        <span>UV ${day.day.uv}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        elements.historyContainer.appendChild(historyElement);
     });
 }
 

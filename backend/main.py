@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 from typing import Optional
 import uvicorn
+from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
@@ -172,6 +173,67 @@ async def get_weather_forecast(city: str = Query(..., description="City name"), 
         
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch forecast data: {str(e)}")
+
+@app.get("/weather/history")
+async def get_weather_history(city: str = Query(..., description="City name"), days: int = Query(3, ge=1, le=7)):
+    """Get weather history for a specific city (last 3-7 days)"""
+    try:
+        history_data = []
+        
+        for i in range(days):
+            # Calculate date for each day in the past
+            date = (datetime.now() - timedelta(days=i+1)).strftime('%Y-%m-%d')
+            
+            url = f"{WEATHER_API_BASE_URL}/history.json"
+            params = {
+                "key": WEATHER_API_KEY,
+                "q": city,
+                "dt": date
+            }
+            
+            response = requests.get(url, params=params)
+            
+            if response.status_code == 400:
+                raise HTTPException(status_code=404, detail="City not found")
+            
+            response.raise_for_status()
+            data = response.json()
+            
+            # Format historical data
+            if data.get("forecast", {}).get("forecastday"):
+                day_data = data["forecast"]["forecastday"][0]
+                formatted_day = {
+                    "date": day_data["date"],
+                    "day": {
+                        "maxtemp_c": day_data["day"]["maxtemp_c"],
+                        "maxtemp_f": day_data["day"]["maxtemp_f"],
+                        "mintemp_c": day_data["day"]["mintemp_c"],
+                        "mintemp_f": day_data["day"]["mintemp_f"],
+                        "avgtemp_c": day_data["day"]["avgtemp_c"],
+                        "avgtemp_f": day_data["day"]["avgtemp_f"],
+                        "condition": {
+                            "text": day_data["day"]["condition"]["text"],
+                            "icon": day_data["day"]["condition"]["icon"]
+                        },
+                        "maxwind_kph": day_data["day"]["maxwind_kph"],
+                        "totalprecip_mm": day_data["day"]["totalprecip_mm"],
+                        "avghumidity": day_data["day"]["avghumidity"],
+                        "uv": day_data["day"]["uv"]
+                    }
+                }
+                history_data.append(formatted_day)
+        
+        return {
+            "location": {
+                "name": data["location"]["name"],
+                "region": data["location"]["region"],
+                "country": data["location"]["country"]
+            },
+            "history": history_data
+        }
+        
+    except requests.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch history data: {str(e)}")
 
 @app.get("/weather/location")
 async def get_weather_by_location(ip: Optional[str] = Query(None, description="IP address for location detection")):
