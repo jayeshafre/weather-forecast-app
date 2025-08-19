@@ -20,7 +20,7 @@ origins = [
 # CORS middleware for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # In production, specify your frontend domain
+    allow_origins=["https://weather-forecast-app-beta-five.vercel.app"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
