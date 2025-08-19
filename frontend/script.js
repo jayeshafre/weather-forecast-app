@@ -1,11 +1,13 @@
 // Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:8000' 
-    : 'https://your-backend-url.onrender.com'; // Replace with your Render URL
+    : 'https://weather-forecast-app-bib8.onrender.com'; // Replace with your Render URL
 
 // State management
 let currentUnit = 'celsius';
 let currentWeatherData = null;
+
+
 
 // DOM elements
 const elements = {

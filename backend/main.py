@@ -12,10 +12,15 @@ load_dotenv()
 
 app = FastAPI(title="Weather Forecast API", version="1.0.0")
 
+origins = [
+    "http://localhost:3000",                   # for local dev
+    "https://weather-forecast-app-beta-five.vercel.app"  #  Vercel frontend
+]
+
 # CORS middleware for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_origins=origins,  # In production, specify your frontend domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
