@@ -15,13 +15,14 @@ app = FastAPI(title="Weather Forecast API", version="1.0.0")
 
 origins = [
     "http://localhost:3000",                   # for local dev
-    "https://weather-forecast-app-beta-five.vercel.app"  #  Vercel frontend
+    "https://weather-forecast-app-beta-five.vercel.app" ,
+    "https://weather-forecast-chi-plum.vercel.app" #  Vercel frontend
 ]
 
 # CORS middleware for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://weather-forecast-app-beta-five.vercel.app"],  
+    allow_origins=["https://weather-forecast-app-beta-five.vercel.app","https://weather-forecast-chi-plum.vercel.app"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
