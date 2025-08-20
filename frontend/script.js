@@ -411,9 +411,15 @@ class WeatherApp {
         this.showLoading('Getting weather for your location...');
         
         try {
+            /*
             const [currentResponse, forecastResponse] = await Promise.all([
                 this.fetchWithTimeout(`${API_CONFIG.baseUrl}/weather/coordinates?lat=${lat}&lon=${lon}`),
                 this.fetchWithTimeout(`${API_CONFIG.baseUrl}/weather/forecast?lat=${lat}&lon=${lon}&days=5`)
+            ]);
+            */
+             const [currentResponse, forecastResponse] = await Promise.all([
+            this.fetchWithTimeout(`${API_CONFIG.baseUrl}/weather?city=${encodeURIComponent(city)}`),
+            this.fetchWithTimeout(`${API_CONFIG.baseUrl}/weather?city=${encodeURIComponent(city)}&days=3`)
             ]);
 
             if (!currentResponse.ok || !forecastResponse.ok) {
