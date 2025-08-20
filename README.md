@@ -8,7 +8,7 @@ A modern, responsive weather forecast application built with FastAPI backend and
 - **Current Weather**: Temperature, feels-like, humidity, wind, UV index
 - **Location Detection**: Auto-detect weather based on IP location
 - **City Search**: Search weather by city name
-- **5-Day Forecast**: Daily weather predictions with high/low temperatures
+- **3-Day Forecast**: Daily weather predictions with high/low temperatures
 - **Hourly Forecast**: 8-hour detailed weather breakdown
 - **Responsive Design**: Mobile-first, works on all screen sizes
 - **Weather Backgrounds**: Dynamic backgrounds based on weather conditions
@@ -179,6 +179,8 @@ Once the backend is running, visit `http://localhost:8000/docs` for interactive 
    
    # Deploy
    vercel
+
+   vercel --prod
    ```
 
 3. **Update API URL**: In `script.js`, update `API_BASE_URL` with your Render backend URL
@@ -261,9 +263,6 @@ async def get_weather_alerts(city: str):
 - **Debug Mode**: Enable browser developer tools
 - **API Testing**: Use the FastAPI docs at `/docs`
 
-## 📝 License
-
-This project is open source and available under the [MIT License](LICENSE).
 
 ## 🤝 Contributing
 
