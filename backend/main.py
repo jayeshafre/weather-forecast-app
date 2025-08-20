@@ -24,18 +24,20 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+origins=[
+    "http://127.0.0.1:5500",
+    "http://localhost:3000",
+    "http://localhost:5500",
+    "https://weather-forecast-app-beta-five.vercel.app",
+    "https://weather-forecast-chi-plum.vercel.app",
+    "https://*.vercel.app",
+
+]
+
 # Enhanced CORS middleware for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5500",
-        "http://localhost:3000",
-        "http://localhost:5500",
-        "https://weather-forecast-app-beta-five.vercel.app",
-        "https://weather-forecast-chi-plum.vercel.app",
-        "https://*.vercel.app",
-        "*"  # For development - restrict this in production
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
