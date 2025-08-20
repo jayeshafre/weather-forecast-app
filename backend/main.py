@@ -516,6 +516,13 @@ async def api_status():
         "endpoints": 7,
         "last_updated": "2025-01-20"
     }
+@app.get("/weather/history")
+async def get_weather_history(city: str, date: str):
+    url = f"http://api.weatherapi.com/v1/history.json?key={API_KEY}&q={city}&dt={date}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise HTTPException(status_code=404, detail="City or date not found")
+    return response.json()
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))

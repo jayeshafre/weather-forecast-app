@@ -1,140 +1,193 @@
 // ===============================
-// Weather App Frontend Script
+// Weather App - script.js (Free API Edition, Default Load)
 // ===============================
 
-const API_CONFIG = {
-    baseUrl: "https://your-backend-url.onrender.com", // change to your Render backend URL
-    timeout: 10000
-};
+const API_BASE = "http://127.0.0.1:8000"; // change to your Render URL after deployment
 
-class WeatherApp {
-    constructor() {
-        this.state = {
-            currentWeatherData: null
-        };
-        this.initEventListeners();
-    }
+// UI Elements
+const cityInput = document.getElementById("cityInput");
+const searchBtn = document.getElementById("searchBtn");
+const locationBtn = document.getElementById("locationBtn");
+const refreshBtn = document.getElementById("refreshBtn");
 
-    // Utility: fetch with timeout
-    async fetchWithTimeout(resource, options = {}) {
-        const { timeout = API_CONFIG.timeout } = options;
+const currentTab = document.getElementById("currentTab");
+const forecastTab = document.getElementById("forecastTab");
+const historyTab = document.getElementById("historyTab");
 
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeout);
+const loadingContainer = document.getElementById("loadingContainer");
+const errorContainer = document.getElementById("errorContainer");
+const errorText = document.getElementById("errorText");
+const weatherContent = document.getElementById("weatherContent");
 
-        try {
-            const response = await fetch(resource, {
-                ...options,
-                signal: controller.signal
-            });
-            return response;
-        } finally {
-            clearTimeout(id);
-        }
-    }
+const currentView = document.getElementById("currentView");
+const forecastView = document.getElementById("forecastView");
+const historyView = document.getElementById("historyView");
 
-    // Show loading spinner
-    showLoading() {
-        document.getElementById("loading").style.display = "block";
-        document.getElementById("weather-content").style.display = "none";
-    }
+// Global state
+let lastCity = null;
 
-    // Hide loading spinner
-    showWeatherContent() {
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("weather-content").style.display = "block";
-    }
+// ============ UI Helpers ============
+function showLoading() {
+    loadingContainer.style.display = "block";
+    errorContainer.style.display = "none";
+    weatherContent.style.display = "none";
+}
 
-    // Search weather by city (calls backend)
-    async searchWeatherByCity(city) {
-        this.showLoading();
-        try {
-            const [currentResponse, forecastResponse] = await Promise.all([
-                this.fetchWithTimeout(`${API_CONFIG.baseUrl}/weather/current?city=${encodeURIComponent(city)}`),
-                this.fetchWithTimeout(`${API_CONFIG.baseUrl}/weather/forecast?city=${encodeURIComponent(city)}&days=5`)
-            ]);
+function showError(message) {
+    loadingContainer.style.display = "none";
+    weatherContent.style.display = "none";
+    errorContainer.style.display = "block";
+    errorText.textContent = message;
+}
 
-            if (!currentResponse.ok || !forecastResponse.ok) {
-                throw new Error("City not found");
-            }
+function showWeather() {
+    loadingContainer.style.display = "none";
+    errorContainer.style.display = "none";
+    weatherContent.style.display = "block";
+}
 
-            const currentData = await currentResponse.json();
-            const forecastData = await forecastResponse.json();
+// ============ Fetch Functions ============
+async function fetchCurrent(city) {
+    const res = await fetch(`${API_BASE}/weather/current?city=${encodeURIComponent(city)}`);
+    if (!res.ok) throw new Error("Failed to fetch current weather");
+    return res.json();
+}
 
-            this.state.currentWeatherData = {
-                current: currentData,
-                forecast: forecastData
-            };
+async function fetchForecast(city) {
+    const res = await fetch(`${API_BASE}/weather/forecast?city=${encodeURIComponent(city)}&days=3`);
+    if (!res.ok) throw new Error("Failed to fetch forecast");
+    return res.json();
+}
 
-            this.updateWeatherDisplay(this.state.currentWeatherData);
-            this.showWeatherContent();
-        } catch (error) {
-            console.error("Error fetching weather:", error);
-            alert("Failed to fetch weather data. Please try again.");
-        }
-    }
+async function fetchHistory(city) {
+    const res = await fetch(`${API_BASE}/weather/history?city=${encodeURIComponent(city)}&days=3`);
+    if (!res.ok) throw new Error("Failed to fetch history");
+    return res.json();
+}
 
-    // Update UI with fetched weather
-    updateWeatherDisplay(data) {
-        const cityEl = document.getElementById("city-name");
-        const tempEl = document.getElementById("temperature");
-        const conditionEl = document.getElementById("condition");
-        const forecastEl = document.getElementById("forecast");
+async function fetchLocationWeather() {
+    const res = await fetch(`${API_BASE}/weather/location`);
+    if (!res.ok) throw new Error("Unable to fetch location weather");
+    return res.json();
+}
 
-        if (!data || !data.current || !data.current.current) {
-            cityEl.textContent = "N/A";
-            tempEl.textContent = "--";
-            conditionEl.textContent = "Data not available";
-            forecastEl.innerHTML = "";
-            return;
-        }
+// ============ Main Loader ============
+async function loadWeather(city) {
+    try {
+        showLoading();
+        lastCity = city;
 
-        const current = data.current.current;
-        const location = data.current.location;
+        const [current, forecast, history] = await Promise.all([
+            fetchCurrent(city),
+            fetchForecast(city),
+            fetchHistory(city)
+        ]);
 
-        cityEl.textContent = `${location.name}, ${location.country}`;
-        tempEl.textContent = `${current.temp_c}°C`;
-        conditionEl.textContent = current.condition.text;
+        updateCurrentUI(current);
+        updateForecastUI(forecast);
+        updateHistoryUI(history);
 
-        // Forecast (next 5 days)
-        forecastEl.innerHTML = "";
-        data.forecast.forecast.forecastday.forEach(day => {
-            const div = document.createElement("div");
-            div.classList.add("forecast-day");
-            div.innerHTML = `
-                <p>${day.date}</p>
-                <img src="https:${day.day.condition.icon}" alt="${day.day.condition.text}">
-                <p>${day.day.avgtemp_c}°C</p>
-                <p>${day.day.condition.text}</p>
-            `;
-            forecastEl.appendChild(div);
-        });
-    }
-
-    // Setup event listeners
-    initEventListeners() {
-        const searchBtn = document.getElementById("search-btn");
-        const searchInput = document.getElementById("city-input");
-
-        searchBtn.addEventListener("click", () => {
-            const city = searchInput.value.trim();
-            if (city) {
-                this.searchWeatherByCity(city);
-            }
-        });
-
-        searchInput.addEventListener("keypress", (event) => {
-            if (event.key === "Enter") {
-                const city = searchInput.value.trim();
-                if (city) {
-                    this.searchWeatherByCity(city);
-                }
-            }
-        });
+        showWeather();
+    } catch (err) {
+        console.error(err);
+        showError(err.message);
     }
 }
 
-// Initialize app
-document.addEventListener("DOMContentLoaded", () => {
-    new WeatherApp();
+// ============ DOM Updaters ============
+function updateCurrentUI(data) {
+    document.getElementById("locationName").textContent = data.location.name;
+    document.getElementById("locationDetails").textContent = `${data.location.region}, ${data.location.country}`;
+    document.getElementById("localTime").querySelector("span").textContent = data.location.localtime;
+
+    document.getElementById("currentTemp").textContent = data.current.temp_c;
+    document.getElementById("feelsLike").textContent = data.current.feelslike_c;
+    document.getElementById("weatherCondition").textContent = data.current.condition.text;
+
+    document.getElementById("weatherIcon").src = data.current.condition.icon;
+    document.getElementById("humidity").textContent = `${data.current.humidity}%`;
+    document.getElementById("windSpeed").textContent = `${data.current.wind_kph} km/h`;
+    document.getElementById("uvIndex").textContent = data.current.uv;
+    document.getElementById("visibility").textContent = `${data.current.visibility_km} km`;
+    document.getElementById("pressure").textContent = `${data.current.pressure_mb} mb`;
+    document.getElementById("airQuality").textContent = data.air_quality ? "Available" : "N/A";
+}
+
+function updateForecastUI(data) {
+    const container = document.getElementById("forecastContainer");
+    container.innerHTML = "";
+    data.forecast.forecastday.forEach(day => {
+        const card = document.createElement("div");
+        card.className = "forecast-card";
+        card.innerHTML = `
+            <p>${day.date}</p>
+            <img src="${day.day.condition.icon}" alt="">
+            <p>${day.day.avgtemp_c}°C</p>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function updateHistoryUI(data) {
+    const container = document.getElementById("historyContainer");
+    container.innerHTML = "";
+    data.history.forEach(day => {
+        const card = document.createElement("div");
+        card.className = "history-card";
+        card.innerHTML = `
+            <p>${day.date}</p>
+            <img src="${day.day.condition.icon}" alt="">
+            <p>${day.day.avgtemp_c}°C</p>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// ============ Event Listeners ============
+searchBtn.addEventListener("click", () => {
+    const city = cityInput.value.trim();
+    if (city) loadWeather(city);
+});
+
+locationBtn.addEventListener("click", async () => {
+    try {
+        showLoading();
+        const data = await fetchLocationWeather();
+        loadWeather(data.location.name);
+    } catch {
+        showError("Unable to fetch location");
+    }
+});
+
+refreshBtn.addEventListener("click", () => {
+    if (lastCity) loadWeather(lastCity);
+});
+
+// Tabs
+[currentTab, forecastTab, historyTab].forEach(tab => {
+    tab.addEventListener("click", () => {
+        currentTab.classList.remove("active");
+        forecastTab.classList.remove("active");
+        historyTab.classList.remove("active");
+
+        currentView.style.display = "none";
+        forecastView.style.display = "none";
+        historyView.style.display = "none";
+
+        tab.classList.add("active");
+        const view = tab.dataset.view;
+        document.getElementById(view + "View").style.display = "block";
+    });
+});
+
+// ============ Default Load ============
+window.addEventListener("load", async () => {
+    try {
+        showLoading();
+        const data = await fetchLocationWeather();
+        await loadWeather(data.location.name);
+    } catch (err) {
+        console.error("Default load failed", err);
+        showError("Unable to load location by default");
+    }
 });
