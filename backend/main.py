@@ -13,16 +13,15 @@ load_dotenv()
 
 app = FastAPI(title="Weather Forecast API", version="1.0.0")
 
-origins = [
-    "http://localhost:3000",                   # for local dev
-    "https://weather-forecast-app-beta-five.vercel.app" ,
-    "https://weather-forecast-chi-plum.vercel.app" #  Vercel frontend
-]
-
 # CORS middleware for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://weather-forecast-app-beta-five.vercel.app","https://weather-forecast-chi-plum.vercel.app"],  
+    allow_origins=[
+        "http://localhost:3000",
+        "https://weather-forecast-app-beta-five.vercel.app",
+        "https://weather-forecast-chi-plum.vercel.app",
+        "https://*.vercel.app"  # Allow all Vercel deployments
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,8 +45,7 @@ async def get_current_weather(city: str = Query(..., description="City name")):
         url = f"{WEATHER_API_BASE_URL}/current.json"
         params = {
             "key": WEATHER_API_KEY,
-            "q": city,
-            "aqi": "yes"
+            "q": city
         }
         
         response = requests.get(url, params=params)
@@ -81,8 +79,7 @@ async def get_current_weather(city: str = Query(..., description="City name")):
                 "wind_mph": data["current"]["wind_mph"],
                 "wind_dir": data["current"]["wind_dir"],
                 "uv": data["current"]["uv"]
-            },
-            "air_quality": data.get("current", {}).get("air_quality", {})
+            }
         }
         
         return formatted_data
@@ -99,7 +96,6 @@ async def get_weather_forecast(city: str = Query(..., description="City name"), 
             "key": WEATHER_API_KEY,
             "q": city,
             "days": days,
-            "aqi": "yes",
             "alerts": "no"
         }
         
@@ -246,8 +242,7 @@ async def get_weather_by_location(ip: Optional[str] = Query(None, description="I
         url = f"{WEATHER_API_BASE_URL}/current.json"
         params = {
             "key": WEATHER_API_KEY,
-            "q": location_query,
-            "aqi": "yes"
+            "q": location_query
         }
         
         response = requests.get(url, params=params)
@@ -277,8 +272,7 @@ async def get_weather_by_location(ip: Optional[str] = Query(None, description="I
                 "wind_mph": data["current"]["wind_mph"],
                 "wind_dir": data["current"]["wind_dir"],
                 "uv": data["current"]["uv"]
-            },
-            "air_quality": data.get("current", {}).get("air_quality", {})
+            }
         }
         
         return formatted_data

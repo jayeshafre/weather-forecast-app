@@ -1,557 +1,267 @@
-// Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000' 
-    : 'https://weather-forecast-app-bib8.onrender.com'; // Replace with your Render URL
+// ==================== CONFIG ====================
+const API_BASE_URL = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : "https://weather-forecast-app-bib8.onrender.com"; // update with your deployed backend
 
-// State management
-let currentUnit = 'celsius';
-let currentWeatherData = null;
+let currentUnit = "celsius";
 let currentCity = null;
-let currentTheme = 'light';
-let currentView = 'current';
+let currentTheme = "light";
+let currentView = "current";
+let weatherData = {};
 
-// DOM elements
-const elements = {
-    cityInput: document.getElementById('cityInput'),
-    searchBtn: document.getElementById('searchBtn'),
-    locationBtn: document.getElementById('locationBtn'),
-    celsiusBtn: document.getElementById('celsiusBtn'),
-    fahrenheitBtn: document.getElementById('fahrenheitBtn'),
-    themeToggle: document.getElementById('themeToggle'),
-    loading: document.getElementById('loading'),
-    errorMessage: document.getElementById('errorMessage'),
-    errorText: document.getElementById('errorText'),
-    weatherContent: document.getElementById('weatherContent'),
-    weatherContainer: document.getElementById('weatherContainer'),
-    
-    // Tab navigation
-    currentTab: document.getElementById('currentTab'),
-    forecastTab: document.getElementById('forecastTab'),
-    historyTab: document.getElementById('historyTab'),
-    currentView: document.getElementById('currentView'),
-    forecastView: document.getElementById('forecastView'),
-    historyView: document.getElementById('historyView'),
-    
-    // Current weather elements
-    locationName: document.getElementById('locationName'),
-    locationDetails: document.getElementById('locationDetails'),
-    localTime: document.getElementById('localTime'),
-    weatherIcon: document.getElementById('weatherIcon'),
-    currentTemp: document.getElementById('currentTemp'),
-    feelsLike: document.getElementById('feelsLike'),
-    weatherCondition: document.getElementById('weatherCondition'),
-    humidity: document.getElementById('humidity'),
-    windSpeed: document.getElementById('windSpeed'),
-    uvIndex: document.getElementById('uvIndex'),
-    
-    // Forecast elements
-    forecastContainer: document.getElementById('forecastContainer'),
-    hourlyContainer: document.getElementById('hourlyContainer'),
-    sunrise: document.getElementById('sunrise'),
-    sunset: document.getElementById('sunset'),
-    aqiValue: document.getElementById('aqiValue'),
-    aqiDescription: document.getElementById('aqiDescription'),
-    
-    // History elements
-    historyContainer: document.getElementById('historyContainer')
+// ==================== DOM ELEMENTS ====================
+const el = {
+  cityInput: document.getElementById("cityInput"),
+  searchBtn: document.getElementById("searchBtn"),
+  locationBtn: document.getElementById("locationBtn"),
+  celsiusBtn: document.getElementById("celsiusBtn"),
+  fahrenheitBtn: document.getElementById("fahrenheitBtn"),
+  themeToggle: document.getElementById("themeToggle"),
+
+  loading: document.getElementById("loadingState"),
+  error: document.getElementById("errorState"),
+  errorMsg: document.getElementById("errorMessage"),
+  retryBtn: document.getElementById("retryBtn"),
+
+  container: document.getElementById("weatherContainer"),
+
+  // Views
+  tabs: {
+    current: document.getElementById("currentTab"),
+    forecast: document.getElementById("forecastTab"),
+    history: document.getElementById("historyTab"),
+  },
+  views: {
+    current: document.getElementById("currentView"),
+    forecast: document.getElementById("forecastView"),
+    history: document.getElementById("historyView"),
+  },
+
+  // Current weather
+  locationName: document.getElementById("locationName"),
+  locationDetails: document.getElementById("locationDetails"),
+  localTime: document.getElementById("localTime"),
+  weatherIcon: document.getElementById("weatherIcon"),
+  weatherCondition: document.getElementById("weatherCondition"),
+  currentTemp: document.getElementById("currentTemp"),
+  feelsLike: document.getElementById("feelsLike"),
+  humidity: document.getElementById("humidity"),
+  windSpeed: document.getElementById("windSpeed"),
+  uvIndex: document.getElementById("uvIndex"),
+  sunrise: document.getElementById("sunrise"),
+  sunset: document.getElementById("sunset"),
+
+  // Forecast
+  forecastContainer: document.getElementById("forecastContainer"),
+  hourlyContainer: document.getElementById("hourlyContainer"),
+
+  // History
+  historyContainer: document.getElementById("historyContainer"),
 };
 
-// Event listeners
-document.addEventListener('DOMContentLoaded', initializeApp);
-elements.searchBtn.addEventListener('click', handleSearch);
-elements.cityInput.addEventListener('keypress', handleKeyPress);
-elements.locationBtn.addEventListener('click', handleLocationSearch);
-elements.celsiusBtn.addEventListener('click', () => setUnit('celsius'));
-elements.fahrenheitBtn.addEventListener('click', () => setUnit('fahrenheit'));
-elements.themeToggle.addEventListener('click', toggleTheme);
+// ==================== EVENT LISTENERS ====================
+document.addEventListener("DOMContentLoaded", init);
+el.searchBtn.addEventListener("click", handleSearch);
+el.cityInput.addEventListener("keypress", e => e.key === "Enter" && handleSearch());
+el.locationBtn.addEventListener("click", fetchLocationWeather);
+el.celsiusBtn.addEventListener("click", () => setUnit("celsius"));
+el.fahrenheitBtn.addEventListener("click", () => setUnit("fahrenheit"));
+el.themeToggle.addEventListener("click", toggleTheme);
+el.retryBtn.addEventListener("click", () => {
+  if (currentCity) searchWeather(currentCity);
+  else fetchLocationWeather();
+});
+Object.entries(el.tabs).forEach(([view, btn]) => btn.addEventListener("click", () => switchView(view)));
 
-// Tab navigation
-elements.currentTab.addEventListener('click', () => switchView('current'));
-elements.forecastTab.addEventListener('click', () => switchView('forecast'));
-elements.historyTab.addEventListener('click', () => switchView('history'));
-
-// Initialize the application
-function initializeApp() {
-    // Load saved theme from localStorage
-    const savedTheme = localStorage.getItem('weatherAppTheme') || 'light';
-    setTheme(savedTheme);
-    
-    // Try to get user's location on load
-    handleLocationSearch();
+// ==================== INIT ====================
+function init() {
+  const savedTheme = localStorage.getItem("weatherAppTheme") || "light";
+  setTheme(savedTheme);
+  fetchLocationWeather();
 }
 
-// Theme management
+// ==================== THEME ====================
 function toggleTheme() {
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
+  setTheme(currentTheme === "light" ? "dark" : "light");
 }
-
 function setTheme(theme) {
-    currentTheme = theme;
-    document.body.classList.remove('light-theme', 'dark-theme');
-    document.body.classList.add(`${theme}-theme`);
-    
-    // Update theme toggle icon
-    const icon = elements.themeToggle.querySelector('i');
-    icon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-    
-    // Save theme preference
-    localStorage.setItem('weatherAppTheme', theme);
+  currentTheme = theme;
+  document.body.classList.remove("light-theme", "dark-theme");
+  document.body.classList.add(`${theme}-theme`);
+  el.themeToggle.querySelector("i").className = theme === "light" ? "fas fa-moon" : "fas fa-sun";
+  localStorage.setItem("weatherAppTheme", theme);
 }
 
-// View switching
-function switchView(viewName) {
-    currentView = viewName;
-    
-    // Update active tab
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`${viewName}Tab`).classList.add('active');
-    
-    // Show/hide view content
-    document.querySelectorAll('.view-content').forEach(view => view.style.display = 'none');
-    document.getElementById(`${viewName}View`).style.display = 'block';
-    
-    // Load data for the selected view
-    if (currentCity) {
-        switch (viewName) {
-            case 'current':
-                // Current data is already loaded
-                break;
-            case 'forecast':
-                if (!currentWeatherData?.forecast) {
-                    loadForecastData(currentCity);
-                }
-                break;
-            case 'history':
-                loadHistoryData(currentCity);
-                break;
-        }
-    }
-}
-
-// Handle search button click
-function handleSearch() {
-    const city = elements.cityInput.value.trim();
-    if (city) {
-        currentCity = city;
-        searchWeatherByCity(city);
-    }
-}
-
-// Handle Enter key press in search input
-function handleKeyPress(e) {
-    if (e.key === 'Enter') {
-        handleSearch();
-    }
-}
-
-// Handle location button click
-function handleLocationSearch() {
-    fetchWeatherByLocation();
-}
-
-// Set temperature unit
+// ==================== UNIT ====================
 function setUnit(unit) {
-    currentUnit = unit;
-    
-    // Update button states
-    elements.celsiusBtn.classList.toggle('active', unit === 'celsius');
-    elements.fahrenheitBtn.classList.toggle('active', unit === 'fahrenheit');
-    
-    // Update display if we have weather data
-    if (currentWeatherData) {
-        updateWeatherDisplay(currentWeatherData);
-        if (currentWeatherData.history) {
-            updateHistoryDisplay(currentWeatherData.history);
-        }
-    }
+  currentUnit = unit;
+  el.celsiusBtn.classList.toggle("unit-btn--active", unit === "celsius");
+  el.fahrenheitBtn.classList.toggle("unit-btn--active", unit === "fahrenheit");
+  if (weatherData.current) updateCurrent(weatherData.current);
+  if (weatherData.forecast) updateForecast(weatherData.forecast.forecast.forecastday);
+  if (weatherData.history) updateHistory(weatherData.history.history);
 }
 
-// Show loading state
+// ==================== VIEWS ====================
+function switchView(view) {
+  currentView = view;
+  Object.values(el.tabs).forEach(btn => btn.classList.remove("tab-btn--active"));
+  el.tabs[view].classList.add("tab-btn--active");
+  Object.values(el.views).forEach(v => v.classList.remove("view-panel--active"));
+  el.views[view].classList.add("view-panel--active");
+
+  if (currentCity) {
+    if (view === "forecast" && !weatherData.forecast) fetchForecast(currentCity);
+    if (view === "history" && !weatherData.history) fetchHistory(currentCity);
+  }
+}
+
+// ==================== STATES ====================
 function showLoading() {
-    elements.loading.style.display = 'block';
-    elements.errorMessage.style.display = 'none';
-    elements.weatherContent.style.display = 'none';
+  el.loading.style.display = "block";
+  el.error.style.display = "none";
+  el.container.style.display = "none";
+}
+function showError(msg) {
+  el.loading.style.display = "none";
+  el.error.style.display = "block";
+  el.errorMsg.textContent = msg;
+  el.container.style.display = "none";
+}
+function showContent() {
+  el.loading.style.display = "none";
+  el.error.style.display = "none";
+  el.container.style.display = "block";
 }
 
-// Show error message
-function showError(message) {
-    elements.loading.style.display = 'none';
-    elements.errorMessage.style.display = 'block';
-    elements.weatherContent.style.display = 'none';
-    elements.errorText.textContent = message;
+// ==================== API CALLS ====================
+async function searchWeather(city) {
+  showLoading();
+  try {
+    const [current, forecast] = await Promise.all([
+      fetch(`${API_BASE_URL}/weather/current?city=${encodeURIComponent(city)}`).then(r => r.json()),
+      fetch(`${API_BASE_URL}/weather/forecast?city=${encodeURIComponent(city)}&days=3`).then(r => r.json()),
+    ]);
+    currentCity = current.location.name;
+    weatherData = { current, forecast };
+    updateCurrent(current);
+    updateForecast(forecast.forecast.forecastday);
+    showContent();
+  } catch {
+    showError("City not found or API error.");
+  }
 }
 
-// Show weather content
-function showWeatherContent() {
-    elements.loading.style.display = 'none';
-    elements.errorMessage.style.display = 'none';
-    elements.weatherContent.style.display = 'block';
+async function fetchLocationWeather() {
+  showLoading();
+  try {
+    const [current, forecast] = await Promise.all([
+      fetch(`${API_BASE_URL}/weather/location`).then(r => r.json()),
+      fetch(`${API_BASE_URL}/weather/forecast?city=auto:ip&days=3`).then(r => r.json()),
+    ]);
+    currentCity = current.location.name;
+    weatherData = { current, forecast };
+    updateCurrent(current);
+    updateForecast(forecast.forecast.forecastday);
+    showContent();
+  } catch {
+    showError("Unable to get your location.");
+  }
 }
 
-// API call to search weather by city
-async function searchWeatherByCity(city) {
-    showLoading();
-    
-    try {
-        const [currentResponse, forecastResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/weather/current?city=${encodeURIComponent(city)}`),
-            fetch(`${API_BASE_URL}/weather/forecast?city=${encodeURIComponent(city)}`)
-        ]);
-
-        if (!currentResponse.ok || !forecastResponse.ok) {
-            throw new Error('City not found');
-        }
-
-        const currentData = await currentResponse.json();
-        const forecastData = await forecastResponse.json();
-        
-        currentWeatherData = { current: currentData, forecast: forecastData };
-        updateWeatherDisplay(currentWeatherData);
-        showWeatherContent();
-        
-    } catch (error) {
-        console.error('Error fetching weather:', error);
-        showError(error.message === 'City not found' ? 'City not found. Please try a different location.' : 'Failed to fetch weather data. Please try again.');
-    }
+async function fetchForecast(city) {
+  try {
+    const forecast = await fetch(`${API_BASE_URL}/weather/forecast?city=${encodeURIComponent(city)}&days=3`).then(r => r.json());
+    weatherData.forecast = forecast;
+    updateForecast(forecast.forecast.forecastday);
+  } catch {}
 }
 
-// Load forecast data
-async function loadForecastData(city) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/weather/forecast?city=${encodeURIComponent(city)}&days=5`);
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch forecast data');
-        }
-        
-        const forecastData = await response.json();
-        currentWeatherData.forecast = forecastData;
-        updateForecastDisplay(forecastData.forecast.forecastday);
-        
-    } catch (error) {
-        console.error('Error fetching forecast:', error);
-    }
+async function fetchHistory(city) {
+  try {
+    const history = await fetch(`${API_BASE_URL}/weather/history?city=${encodeURIComponent(city)}&days=3`).then(r => r.json());
+    weatherData.history = history;
+    updateHistory(history.history);
+  } catch {
+    el.historyContainer.innerHTML = `<p class="error-text">Failed to load historical data</p>`;
+  }
 }
 
-// Load history data
-async function loadHistoryData(city) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/weather/history?city=${encodeURIComponent(city)}&days=3`);
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch history data');
-        }
-        
-        const historyData = await response.json();
-        currentWeatherData.history = historyData.history;
-        updateHistoryDisplay(historyData.history);
-        
-    } catch (error) {
-        console.error('Error fetching history:', error);
-        elements.historyContainer.innerHTML = '<p class="error-text">Failed to load historical data</p>';
-    }
+// ==================== UPDATES ====================
+function updateCurrent(data) {
+  el.locationName.textContent = data.location.name;
+  el.locationDetails.textContent = `${data.location.region}, ${data.location.country}`;
+  el.localTime.textContent = data.location.localtime;
+
+  const temp = currentUnit === "celsius" ? data.current.temp_c : data.current.temp_f;
+  const feels = currentUnit === "celsius" ? data.current.feelslike_c : data.current.feelslike_f;
+  const unit = currentUnit === "celsius" ? "°C" : "°F";
+
+  el.currentTemp.textContent = Math.round(temp);
+  el.feelsLike.textContent = Math.round(feels);
+  el.weatherCondition.textContent = data.current.condition.text;
+  el.weatherIcon.src = `https:${data.current.condition.icon}`;
+  el.weatherIcon.alt = data.current.condition.text;
+
+  el.humidity.textContent = `${data.current.humidity}%`;
+  el.windSpeed.textContent = `${currentUnit === "celsius" ? data.current.wind_kph + " km/h" : data.current.wind_mph + " mph"} ${data.current.wind_dir}`;
+  el.uvIndex.textContent = data.current.uv;
 }
 
-// API call to fetch weather by location
-async function fetchWeatherByLocation() {
-    showLoading();
-    
-    try {
-        const [currentResponse, forecastResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/weather/location`),
-            fetch(`${API_BASE_URL}/weather/forecast?city=auto:ip`)
-        ]);
+function updateForecast(days) {
+  el.forecastContainer.innerHTML = "";
+  days.forEach((day, idx) => {
+    const div = document.createElement("div");
+    div.className = "forecast-card";
+    div.innerHTML = `
+      <h4>${idx === 0 ? "Today" : new Date(day.date).toLocaleDateString("en-US", { weekday: "short" })}</h4>
+      <img src="https:${day.day.condition.icon}" alt="${day.day.condition.text}">
+      <p>${day.day.condition.text}</p>
+      <div>${Math.round(currentUnit === "celsius" ? day.day.maxtemp_c : day.day.maxtemp_f)}° / 
+      ${Math.round(currentUnit === "celsius" ? day.day.mintemp_c : day.day.mintemp_f)}°</div>
+    `;
+    el.forecastContainer.appendChild(div);
+  });
 
-        if (!currentResponse.ok || !forecastResponse.ok) {
-            throw new Error('Location not available');
-        }
-
-        const currentData = await currentResponse.json();
-        const forecastData = await forecastResponse.json();
-        
-        currentCity = currentData.location.name;
-        currentWeatherData = { current: currentData, forecast: forecastData };
-        updateWeatherDisplay(currentWeatherData);
-        showWeatherContent();
-        
-    } catch (error) {
-        console.error('Error fetching location weather:', error);
-        showError('Unable to get your location. Please search for a city instead.');
-    }
+  if (days[0] && days[0].hour) updateHourly(days[0].hour);
+  if (days[0] && days[0].astro) {
+    el.sunrise.textContent = days[0].astro.sunrise;
+    el.sunset.textContent = days[0].astro.sunset;
+  }
 }
 
-// Update weather display
-function updateWeatherDisplay(data) {
-    const { current } = data;
-    
-    // Update location info
-    elements.locationName.textContent = current.location.name;
-    elements.locationDetails.textContent = `${current.location.region}, ${current.location.country}`;
-    elements.localTime.textContent = `Local time: ${formatDateTime(current.location.localtime)}`;
-    
-    // Update current weather
-    const temp = currentUnit === 'celsius' ? current.current.temp_c : current.current.temp_f;
-    const feelsLike = currentUnit === 'celsius' ? current.current.feelslike_c : current.current.feelslike_f;
-    const unit = currentUnit === 'celsius' ? '°C' : '°F';
-    
-    elements.currentTemp.textContent = Math.round(temp);
-    elements.feelsLike.textContent = Math.round(feelsLike);
-    elements.weatherCondition.textContent = current.current.condition.text;
-    elements.weatherIcon.src = `https:${current.current.condition.icon}`;
-    elements.weatherIcon.alt = current.current.condition.text;
-    
-    // Update unit displays
-    document.querySelectorAll('.unit').forEach(el => el.textContent = unit);
-    
-    // Update weather details
-    elements.humidity.textContent = `${current.current.humidity}%`;
-    
-    const windSpeed = currentUnit === 'celsius' ? current.current.wind_kph : current.current.wind_mph;
-    const windUnit = currentUnit === 'celsius' ? 'km/h' : 'mph';
-    elements.windSpeed.textContent = `${windSpeed} ${windUnit} ${current.current.wind_dir}`;
-    
-    elements.uvIndex.textContent = current.current.uv;
-    
-    // Update air quality
-    if (current.air_quality && current.air_quality.co) {
-        const aqi = calculateAQI(current.air_quality);
-        elements.aqiValue.textContent = aqi.value;
-        elements.aqiDescription.textContent = aqi.description;
-    } else {
-        elements.aqiValue.textContent = 'N/A';
-        elements.aqiDescription.textContent = 'Data not available';
-    }
-    
-    // Update forecast if available
-    if (data.forecast) {
-        updateForecastDisplay(data.forecast.forecast.forecastday);
-        
-        // Update sun times (from first forecast day)
-        if (data.forecast.forecast.forecastday.length > 0) {
-            const astro = data.forecast.forecast.forecastday[0].astro;
-            elements.sunrise.textContent = astro.sunrise;
-            elements.sunset.textContent = astro.sunset;
-        }
-    }
-    
-    // Update background based on weather condition
-    updateBackground(current.current.condition.code);
+function updateHourly(hours) {
+  el.hourlyContainer.innerHTML = "";
+  hours.slice(0, 8).forEach(h => {
+    const div = document.createElement("div");
+    div.className = "hourly-card";
+    div.innerHTML = `
+      <span>${new Date(h.time).toLocaleTimeString([], { hour: "numeric" })}</span>
+      <img src="https:${h.condition.icon}" alt="${h.condition.text}">
+      <span>${Math.round(currentUnit === "celsius" ? h.temp_c : h.temp_f)}°</span>
+    `;
+    el.hourlyContainer.appendChild(div);
+  });
 }
 
-// Update forecast display
-function updateForecastDisplay(forecastDays) {
-    elements.forecastContainer.innerHTML = '';
-    
-    forecastDays.forEach((day, index) => {
-        const forecastElement = document.createElement('div');
-        forecastElement.className = 'forecast-day';
-        
-        const date = new Date(day.date);
-        const dayName = index === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' });
-        
-        const highTemp = currentUnit === 'celsius' ? day.day.maxtemp_c : day.day.maxtemp_f;
-        const lowTemp = currentUnit === 'celsius' ? day.day.mintemp_c : day.day.mintemp_f;
-        const unit = currentUnit === 'celsius' ? '°C' : '°F';
-        
-        forecastElement.innerHTML = `
-            <h4>${dayName}</h4>
-            <img src="https:${day.day.condition.icon}" alt="${day.day.condition.text}">
-            <div class="condition">${day.day.condition.text}</div>
-            <div class="temps">
-                <span class="high">${Math.round(highTemp)}${unit}</span>
-                <span class="low">${Math.round(lowTemp)}${unit}</span>
-            </div>
-            <div class="extra-info">
-                <small><i class="fas fa-tint"></i> ${day.day.avghumidity}%</small>
-                <small><i class="fas fa-wind"></i> ${day.day.maxwind_kph} km/h</small>
-            </div>
-        `;
-        
-        elements.forecastContainer.appendChild(forecastElement);
-    });
-    
-    // Update hourly forecast for today
-    if (forecastDays.length > 0) {
-        updateHourlyDisplay(forecastDays[0].hour);
-    }
+function updateHistory(days) {
+  el.historyContainer.innerHTML = "";
+  days.forEach(d => {
+    const div = document.createElement("div");
+    div.className = "history-card";
+    div.innerHTML = `
+      <h4>${d.date}</h4>
+      <img src="https:${d.day.condition.icon}" alt="${d.day.condition.text}">
+      <p>${d.day.condition.text}</p>
+      <p>High: ${Math.round(currentUnit === "celsius" ? d.day.maxtemp_c : d.day.maxtemp_f)}°</p>
+      <p>Low: ${Math.round(currentUnit === "celsius" ? d.day.mintemp_c : d.day.mintemp_f)}°</p>
+    `;
+    el.historyContainer.appendChild(div);
+  });
 }
 
-// Update hourly forecast display
-function updateHourlyDisplay(hourlyData) {
-    elements.hourlyContainer.innerHTML = '';
-    
-    // Show next 8 hours
-    hourlyData.slice(0, 8).forEach(hour => {
-        const hourlyElement = document.createElement('div');
-        hourlyElement.className = 'hourly-item';
-        
-        const time = new Date(hour.time);
-        const hourString = time.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            hour12: true 
-        });
-        
-        const temp = currentUnit === 'celsius' ? hour.temp_c : hour.temp_f;
-        const unit = currentUnit === 'celsius' ? '°C' : '°F';
-        
-        hourlyElement.innerHTML = `
-            <h4>${hourString}</h4>
-            <img src="https:${hour.condition.icon}" alt="${hour.condition.text}">
-            <div class="temp">${Math.round(temp)}${unit}</div>
-            <div class="humidity">${hour.humidity}%</div>
-        `;
-        
-        elements.hourlyContainer.appendChild(hourlyElement);
-    });
-}
-
-// Update history display
-function updateHistoryDisplay(historyData) {
-    elements.historyContainer.innerHTML = '';
-    
-    if (!historyData || historyData.length === 0) {
-        elements.historyContainer.innerHTML = '<p class="no-data">No historical data available</p>';
-        return;
-    }
-    
-    historyData.forEach((day, index) => {
-        const historyElement = document.createElement('div');
-        historyElement.className = 'history-day';
-        
-        const date = new Date(day.date);
-        const dayName = index === 0 ? 'Yesterday' : date.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            month: 'short', 
-            day: 'numeric' 
-        });
-        
-        const highTemp = currentUnit === 'celsius' ? day.day.maxtemp_c : day.day.maxtemp_f;
-        const lowTemp = currentUnit === 'celsius' ? day.day.mintemp_c : day.day.mintemp_f;
-        const avgTemp = currentUnit === 'celsius' ? day.day.avgtemp_c : day.day.avgtemp_f;
-        const unit = currentUnit === 'celsius' ? '°C' : '°F';
-        
-        historyElement.innerHTML = `
-            <div class="history-header">
-                <h4>${dayName}</h4>
-                <span class="history-date">${date.toLocaleDateString()}</span>
-            </div>
-            <div class="history-content">
-                <div class="history-weather">
-                    <img src="https:${day.day.condition.icon}" alt="${day.day.condition.text}">
-                    <div class="history-condition">${day.day.condition.text}</div>
-                </div>
-                <div class="history-temps">
-                    <div class="temp-row">
-                        <span class="temp-label">High:</span>
-                        <span class="temp-value high">${Math.round(highTemp)}${unit}</span>
-                    </div>
-                    <div class="temp-row">
-                        <span class="temp-label">Low:</span>
-                        <span class="temp-value low">${Math.round(lowTemp)}${unit}</span>
-                    </div>
-                    <div class="temp-row">
-                        <span class="temp-label">Avg:</span>
-                        <span class="temp-value">${Math.round(avgTemp)}${unit}</span>
-                    </div>
-                </div>
-                <div class="history-details">
-                    <div class="detail-small">
-                        <i class="fas fa-tint"></i>
-                        <span>${day.day.avghumidity}%</span>
-                    </div>
-                    <div class="detail-small">
-                        <i class="fas fa-wind"></i>
-                        <span>${day.day.maxwind_kph} km/h</span>
-                    </div>
-                    <div class="detail-small">
-                        <i class="fas fa-cloud-rain"></i>
-                        <span>${day.day.totalprecip_mm}mm</span>
-                    </div>
-                    <div class="detail-small">
-                        <i class="fas fa-sun"></i>
-                        <span>UV ${day.day.uv}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        elements.historyContainer.appendChild(historyElement);
-    });
-}
-
-// Calculate simple AQI from air quality data
-function calculateAQI(airQuality) {
-    if (!airQuality || !airQuality.co) {
-        return { value: 'N/A', description: 'No data' };
-    }
-    
-    // Simple AQI calculation based on CO levels
-    const co = airQuality.co;
-    let aqi, description;
-    
-    if (co <= 4.4) {
-        aqi = Math.round((50 / 4.4) * co);
-        description = 'Good';
-    } else if (co <= 9.4) {
-        aqi = Math.round(50 + ((100 - 50) / (9.4 - 4.4)) * (co - 4.4));
-        description = 'Moderate';
-    } else if (co <= 12.4) {
-        aqi = Math.round(100 + ((150 - 100) / (12.4 - 9.4)) * (co - 9.4));
-        description = 'Unhealthy for Sensitive Groups';
-    } else if (co <= 15.4) {
-        aqi = Math.round(150 + ((200 - 150) / (15.4 - 12.4)) * (co - 12.4));
-        description = 'Unhealthy';
-    } else {
-        aqi = 200;
-        description = 'Very Unhealthy';
-    }
-    
-    return { value: aqi, description };
-}
-
-// Update background based on weather condition
-function updateBackground(conditionCode) {
-    const body = document.body;
-    
-    // Remove existing weather classes
-    body.classList.remove('sunny', 'cloudy', 'rainy', 'snowy');
-    
-    // Weather condition codes from WeatherAPI
-    if ([1000].includes(conditionCode)) {
-        body.classList.add('sunny');
-    } else if ([1003, 1006, 1009].includes(conditionCode)) {
-        body.classList.add('cloudy');
-    } else if ([1063, 1150, 1153, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1240, 1243, 1246, 1273, 1276, 1279, 1282].includes(conditionCode)) {
-        body.classList.add('rainy');
-    } else if ([1066, 1069, 1072, 1114, 1117, 1204, 1207, 1210, 1213, 1216, 1219, 1222, 1225, 1237, 1249, 1252, 1255, 1258, 1261, 1264].includes(conditionCode)) {
-        body.classList.add('snowy');
-    } else {
-        body.classList.add('cloudy'); // Default to cloudy
-    }
-}
-
-// Format date and time
-function formatDateTime(dateTimeString) {
-    const date = new Date(dateTimeString);
-    return date.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    });
-}
-
-// Service worker registration for PWA (optional)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW registration failed: ', registrationError);
-            });
-    });
+// ==================== HANDLERS ====================
+function handleSearch() {
+  const city = el.cityInput.value.trim();
+  if (city) searchWeather(city);
 }
