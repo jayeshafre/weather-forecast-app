@@ -1,6 +1,6 @@
 # 🌤️ Weather Forecast Application
 
-A modern, responsive weather forecast application built with FastAPI backend and vanilla JavaScript frontend. Features current weather, 5-day forecasts, hourly predictions, and location-based weather detection.
+A modern, responsive weather forecast application built with FastAPI backend and vanilla JavaScript frontend. Features current weather, 3-day forecasts, 3-day history, and location-based weather detection.
 
 ## ✨ Features
 
@@ -38,20 +38,25 @@ A modern, responsive weather forecast application built with FastAPI backend and
 ## 📁 Project Structure
 
 ```
-weather_forecast/
+WEATHER_FORECAST/
 │
-├── backend/
-│   ├── main.py              # FastAPI application
-│   ├── requirements.txt     # Python dependencies
-│   └── .env                 # Environment variables (not in git)
+├── backend/                     # Backend (FastAPI)
+│   ├── .env                      # Environment variables (not committed)
+│   ├── .env.example              # Example env file for sharing
+│   └── main.py                   # FastAPI application entry point
 │
-├── frontend/
-│   ├── index.html          # Main HTML file
-│   ├── style.css           # Stylesheet
-│   └── script.js           # JavaScript functionality
+├── frontend/                     # Frontend (HTML, CSS, JS)
+│   ├── .vercel                   # Vercel deployment config folder
+│   ├── index.html                # Main HTML file
+│   ├── script.js                 # Client-side JavaScript
+│   └── style.css                 # Stylesheet
 │
-├── .gitignore              # Git ignore rules
-└── README.md              # Project documentation
+├── .gitignore                    # Git ignore rules
+├── README.md                     # Project documentation
+├── render.yaml                   # Render deployment configuration
+├── requirements.txt              # Python dependencies
+└── vercel.json                   # Vercel configuration file
+
 ```
 
 ## 🚀 Quick Start
