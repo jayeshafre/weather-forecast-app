@@ -16,7 +16,7 @@ const CONFIG = {
         location: '/weather/location',
         coordinates: '/weather/coordinates'
     },
-    DEFAULT_CITY: 'London',
+    DEFAULT_CITY: 'Pune',
     CACHE_DURATION: 10 * 60 * 1000, // 10 minutes
     REQUEST_TIMEOUT: 15000 // 15 seconds
 };
