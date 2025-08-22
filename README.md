@@ -2,6 +2,28 @@
 
 A modern, responsive weather forecast application built with FastAPI backend and vanilla JavaScript frontend. Features current weather, 3-day forecasts, 3-day history, and location-based weather detection.
 
+## 🔗 Live Preview
+
+👉 [Weather Forecast App](https://weather-forecast-chi-plum.vercel.app/)
+
+---
+
+## 📸 Screenshots
+
+### Homepage
+<img width="1874" height="943" alt="image" src="https://github.com/user-attachments/assets/a2286a2a-3267-43d9-91e6-8224d90e578f" />
+
+
+### City Search Result
+<img width="1872" height="932" alt="image" src="https://github.com/user-attachments/assets/96706e03-5237-4051-b4e5-a3c2a755c44d" />
+
+
+### History View
+<img width="1890" height="940" alt="image" src="https://github.com/user-attachments/assets/1fbe8204-def6-4804-8353-b3b72379d52a" />
+
+
+---
+
 ## ✨ Features
 
 ### Core Features
@@ -284,5 +306,12 @@ async def get_weather_alerts(city: str):
 - [FastAPI](https://fastapi.tiangolo.com/) for the excellent Python framework
 
 ---
+
+## 📬 Contact
+
+👤 **Author**: Jayesh Afre  
+
+🔗 [![GitHub](https://img.shields.io/badge/GitHub-jayeshafre-181717?style=flat&logo=github)](https://github.com/jayeshafre)  
+🔗 [![LinkedIn](https://img.shields.io/badge/LinkedIn-jayesh--afre-0A66C2?style=flat&logo=linkedin)](https://linkedin.com/in/jayesh-afre)  
 
 **Built with ❤️ for learning and portfolio showcase**
